@@ -160,6 +160,182 @@ Symbolizer.prototype._changeShininess = function changeShininess(value, i, j) {
     this.view.notifyChange(true);
 };
 
+
+Symbolizer.prototype._changeEdgeTexture = function changeEdgeTexture(chemin, i) {
+    var vertex =
+    `
+    attribute vec3  position2;
+    uniform   vec2  resolution;
+    uniform   float thickness;
+    varying   vec3 v_uv;
+    varying   float choixTex;
+    void main() {
+    gl_Position = projectionMatrix *
+                    modelViewMatrix *
+                    vec4(position,1.0);
+
+    vec4 Position2 = projectionMatrix *
+                    modelViewMatrix *
+                    vec4(position2,1.0);
+
+    vec2 normal = normalize((gl_Position.xy/gl_Position.w - Position2.xy/Position2.w) * resolution); // * 0.5
+    normal = uv.x * uv.y * vec2(-normal.y, normal.x);
+
+    if (length((gl_Position.xyz+Position2.xyz)/2.0)>25.0){
+        gl_Position.xy += 25.0*(thickness/length((gl_Position.xyz+Position2.xyz)/2.0)) * gl_Position.w * normal * 2.0 / resolution;
+        }
+    else {
+        gl_Position.xy += thickness * gl_Position.w * normal * 2.0 / resolution;
+    }
+
+    if (distance(position, position2) < 3.0){
+        choixTex = 1.0;
+        
+    } else if (distance(position, position2) > 10.0){
+        choixTex = 3.0;
+    //  v_uv = vec3(2.0*(uv.x-0.5),uv.y,1.)*gl_Position.w;
+    }else {
+        choixTex = 2.0;
+    }
+
+    v_uv = vec3(uv,1.)*gl_Position.w;
+
+    }
+    `;
+
+    var fragment =
+    `
+    varying vec3  v_uv;
+    varying float choixTex;
+    uniform sampler2D texture1;
+    uniform sampler2D texture2;
+    uniform sampler2D texture3;
+    uniform sampler2D paper;
+    uniform vec3 color;
+    
+
+    void main() {
+    vec2 uv = v_uv.xy/v_uv.z;
+    vec4 baseColor = texture2D(texture1, (uv+1.)*0.5);
+    //vec4 paperColor = texture2D(paper, (uv+1.)*0.5 );
+
+    if (choixTex == 2.0){
+        baseColor = texture2D(texture2, (uv+1.)*0.5);   
+    } else if (choixTex == 3.0){
+        baseColor = texture2D(texture3, (uv+1.)*0.5);   
+    }
+
+    if ( baseColor.a < 0.3 ) discard;
+       gl_FragColor = baseColor+vec4(color,0.0); //0.0 si on veut la transparence des arêtes
+    }
+    `;
+    var color = new THREE.Color(getRandomColor());
+    var width = 50;
+
+    var texture1;
+    var texture2;
+
+    var loader1 = new THREE.TextureLoader();
+    var loader2 = new THREE.TextureLoader();
+    var loader3 = new THREE.TextureLoader();
+
+    loader1.load(
+        'strokes/'.concat('brush').concat('_small.png'),
+        (texture) => {
+            texture1 = texture;
+            loader2.load(
+                'strokes/'.concat('brush').concat('.png'),
+                   (text) => {
+                       texture2 = text;
+                       loader3.load(
+                            'strokes/paper2.png',
+                            (paper) => {
+                                this._createMaterial(i, texture1, texture2, paper, vertex, fragment, color, width);
+                            },
+                            undefined,
+                            (err) => {
+                                console.error('An error happened.');
+                            });
+                   },
+            undefined,
+            (err) => {
+                console.error('An error happened.');
+            });
+        },
+        undefined,
+        (err) => {
+            console.error('An error happened.');
+        });
+};
+
+Symbolizer.prototype._createMaterial = function createMaterial(i, texture1, texture2, paper, vertex, fragment, color, width) {
+    var material = new THREE.ShaderMaterial({
+        vertexShader: vertex,
+        fragmentShader: fragment,
+        uniforms:
+        {
+            time: { value: 1.0 },
+            thickness: { value: width },
+            resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            texture1: { type: 't', value: texture1 },
+            texture2: { type: 't', value: texture2 },
+            texture3: { type: 't', value: texture2 },
+            paper: { type: 't', value: paper },
+            color: { type: 'v3', value: [color.r, color.g, color.b] },
+        },
+    });
+    material.side = THREE.DoubleSide;
+    material.transparent = true;
+    material.polygonOffset = true;
+    material.polygonOffsetUnits = -150.0;
+    material.visible = true;
+    material.needsUpdate = true;
+
+    var group = new THREE.Group();
+    console.log('edges', this.edges);
+
+    console.log(this.obj);
+    console.log(i);
+    for (var j = 0; j < this.obj[i].children.length; j++) {
+
+
+        var edg = new THREE.EdgesGeometry(this.obj[i].children[j].geometry);
+
+        var vvv = edg.getAttribute('position');
+        console.log(vvv.itemSize);
+        console.log(vvv.count);
+        for (var k = 0; k < vvv.count - 5; k += 6) {
+            var lineGeom = createQuad(
+                new THREE.Vector3(vvv.array[k], vvv.array[k + 1], vvv.array[k + 2]),
+                new THREE.Vector3(vvv.array[k + 3], vvv.array[k + 4], vvv.array[k + 5]));
+            var mesh = new THREE.Mesh(lineGeom, new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+
+            mesh.position.copy(this.obj[i].children[j].position);
+            mesh.scale.copy(this.obj[i].children[j].scale);
+            mesh.rotation.copy(this.obj[i].children[j].rotation);
+
+            mesh.material.needsUpdate = true;
+            mesh.updateMatrixWorld();
+            group.add(mesh);
+        }
+        this.edges[i].children[j].material = material;
+        this.edges[i].children[j].material.needsUpdate = true;
+        /*
+        this.edges.children[i].material = material;
+        this.edges.children[i].material.needsUpdate = true;
+        console.log(this.edges.children[i].geometry);
+        var mesh = new THREE.Mesh(this.edges.children[i].geometry, material);
+        mesh.position.copy(this.edges.children[i].position);
+        mesh.updateMatrixWorld();
+        // this.edges.children[i].material = material;
+        this.view.scene.add(mesh);
+        */
+    }
+    this.view.scene.add(group);
+    this.view.notifyChange(true);
+    console.log(group);
+};
+
 Symbolizer.prototype._changeTexture = function changeTexture(chemin, i, j, folder) {
 
     if (chemin != './textures/') {
@@ -594,12 +770,14 @@ Symbolizer.prototype._addTextureAll = function addTextureAll(folder) {
 };
 
 
-Symbolizer.prototype._addEdgeTextureAll = function addEdgeTextureAll(folder, index) {
+Symbolizer.prototype._addEdgeTextureAll = function addEdgeTextureAll(folder) {
     Fetcher.json('./textures/listeEdgeTexture.json').then((listTextures) => {
         if (listTextures) {
             listTextures[''] = '';
             folder.add({ texture: '' }, 'texture', listTextures).onChange((value) => {
-                this._changeEdgeTexture('./textures/'.concat(value), index);
+                for (let i = 0; i < this.edges.length; i++) {
+                    this._changeEdgeTexture('./textures/'.concat(value), i);
+                }
             }).name('Edge texture');
         }
     });
@@ -621,7 +799,7 @@ Symbolizer.prototype.initGuiAll = function addToGUI() {
     this._addColorEdgeAll(edgesFolder);
     this._addOpacityEdgeAll(edgesFolder);
     this._addWidthEdgeAll(edgesFolder);
-    // this.addEdgeTextureAll(folder);
+    this._addEdgeTextureAll(edgesFolder);
     var facesFolder = folder.addFolder('Faces');
     this._addTextureAll(facesFolder);
     this._addOpacityAll(facesFolder);
@@ -668,17 +846,48 @@ function getRandomColor() {
     return color;
 }
 
-function getSourceSynch(url) {
-    var req = new XMLHttpRequest();
-    req.open('GET', url, false);
-    req.send();
-    return req.responseText;
-}
+function createQuad(pt1, pt2) {
 
-function getMethod(shader) {
-    var text = getSourceSynch('./methods/'.concat(shader).concat('.json'));
-    var method = JSON.parse(text);
-    return method;
+    // Définition propre a chaque géométrie
+    var geometry = new THREE.BufferGeometry();
+
+    // les 6 points
+    var vertices = new Float32Array([
+        pt1.x, pt1.y, pt1.z, // -1
+        pt2.x, pt2.y, pt2.z, // -1
+        pt2.x, pt2.y, pt2.z, //  1
+
+        pt2.x, pt2.y, pt2.z, //  1
+        pt1.x, pt1.y, pt1.z, //  1
+        pt1.x, pt1.y, pt1.z]);
+
+    // pour chacun des six points, le point opposé correspondant
+    var vertices2 = new Float32Array([
+        pt2.x, pt2.y, pt2.z,
+        pt1.x, pt1.y, pt1.z,
+        pt1.x, pt1.y, pt1.z,
+
+
+        pt1.x, pt1.y, pt1.z,
+        pt2.x, pt2.y, pt2.z,
+        pt2.x, pt2.y, pt2.z]);
+
+    geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    geometry.addAttribute('position2', new THREE.BufferAttribute(vertices2, 3));
+
+    var uv = new Float32Array([
+        -1, -1,
+        1, -1,
+        1, 1,
+
+        1, 1,
+        -1, 1,
+        -1, -1]);
+
+
+    geometry.addAttribute('uv', new THREE.BufferAttribute(uv, 2));
+
+    return geometry;
 }
 
 export default Symbolizer;

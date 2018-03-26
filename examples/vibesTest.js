@@ -163,31 +163,3 @@ function loadFileException(message) {
     this.message = message;
     this.name = "loadFileException";
  }
-
-
-var options = {
-    buildings: { url: "./models/Buildings3D/", visible: true, },
-    position: { x:651250, y:6861250, z:0 , CRS: 'EPSG:2154'},
-};
-
-// https://epsg.io/
-itowns.proj4.defs("EPSG:2154","+proj=lcc +lat_1=49 +lat_2=44 +lat_0=46.5 +lon_0=3 +x_0=700000 +y_0=6600000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs");
-
-itowns.gfxEngine.setCamera(globeView.camera.camera3D);
-itowns.gfxEngine.setScene(globeView.scene);
-
-/*
-var coord1 = itowns.proj4(options.position.CRS, "EPSG:4326", [options.position.x, options.position.y])
-var coord2 = new itowns.Coordinates("EPSG:4326", coord1[0], coord1[1], 40);
-console.log('1', coord2.latitude(), coord2.longitude(), 40);
-var coord3 = coord2.as('EPSG:4978');
-console.log('2', coord3.x(), coord3.y(), coord3.z());
-/*
-itowns.gfxEngine.setZero(options.position);
-*/
-if (!itowns.Cartography3D.isCartoInitialized()){
-    itowns.Cartography3D.initCarto3D(options.buildings);
-};
-/*
-globeView.controls.setCameraTargetGeoPosition({longitude:60, latitude:40}, true);
-*/

@@ -170,7 +170,7 @@ Symbolizer.prototype._changeTexture = function changeTexture(chemin, index) {
 };
 
 
-Symbolizer.prototype._changeEdgeTexture = function _changeTextureSketchy(chemin) {
+Symbolizer.prototype._changeEdgeTexture = function _changeEdgeTexture(chemin) {
     var vertex =
     `
     attribute vec3  position2;
