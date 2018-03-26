@@ -2,9 +2,8 @@
  * A loader for 3D model of diverse formats
  */
 
-import * as OBJLoader from 'three-obj-loader';
 import * as THREE from 'three';
-// import TDSLoader from './TDSLoader';
+import * as OBJLoader from 'three-obj-loader';
 
 OBJLoader(THREE);
 
@@ -33,9 +32,9 @@ ModelLoader.prototype._loadModel = function loadModel(obj, coord, rotateX, rotat
     // Set camera layer not to disturb the picking
     obj.traverse(obj => obj.layers.set(objID));
     this.view.camera.camera3D.layers.enable(objID);
-    this.view.notifyChange(true);
-
     var lines = new THREE.Group();
+
+    obj.castShadow = true;
 
     for (var i = 0; i < obj.children.length; i++) {
         // Material initialization
@@ -47,15 +46,44 @@ ModelLoader.prototype._loadModel = function loadModel(obj, coord, rotateX, rotat
 
         // Extract edges
         var edges = new THREE.EdgesGeometry(obj.children[i].geometry);
-        var line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true }));
+        var line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff }));
+        line = this._placeModel(line, coord, rotateX, rotateY, rotateZ, scale);
+        line.updateMatrixWorld();
         lines.add(line);
     }
-    lines = this._placeModel(lines, coord, rotateX, rotateY, rotateZ, scale); 
-    lines.updateMatrixWorld();
 
-    var linesID = this.view.mainLoop.gfxEngine.getUniqueThreejsLayer();
-    lines.traverse(lines => lines.layers.set(linesID));
-    this.view.camera.camera3D.layers.enable(linesID);
+    var renderer = new THREE.WebGLRenderer();
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    
+    // Create a DirectionalLight and turn on shadows for the light
+    var light = new THREE.DirectionalLight(0xffffff, 1, 100);
+    light.position.set(-0.5, 0, 1);        
+    light.castShadow = true; // default false      
+    this.view.scene.add(light);
+
+    // Set up shadow properties for the light
+    light.shadow.mapSize.width = 512;  // default
+    light.shadow.mapSize.height = 512; // default
+    light.shadow.camera.near = 0.5;    // default
+    light.shadow.camera.far = 500;     // default
+
+
+    // Create a plane that receives shadows (but does not cast them)
+    var planeID = this.view.mainLoop.gfxEngine.getUniqueThreejsLayer();
+    var planeGeometry = new THREE.PlaneBufferGeometry(10, 10, 32, 32);
+    var planeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    var plane = new THREE.Mesh(planeGeometry, planeMaterial);
+    plane = this._placeModel(plane, coord, 0, 0, 0, scale);
+    plane.position.y += 50;
+    plane.receiveShadow = true;
+
+    plane.traverse((obj) => { obj.layers.set(planeID); });
+    this.view.camera.camera3D.layers.enable(planeID);
+
+    plane.updateMatrixWorld();
+    this.view.scene.add(plane);
 
     // Update coordinate of the object
     obj.updateMatrixWorld();
@@ -77,23 +105,5 @@ ModelLoader.prototype._placeModel = function placeModel(obj, coord, rotateX, rot
     obj.scale.set(scale, scale, scale);
     return obj;
 };
-
-/*
-ModelLoader.prototype.load3DS = function load3DS(url) {
-    var loader = new TDSLoader();
-    loader.load(url, (object) => {
-        console.log('on load');
-        */
-        /* object.traverse((child) => {
-            if (child instanceof THREE.Mesh) child.material.normalMap = 'normal';
-        });
-        */
-        /*
-        this.view.scene.add(object);
-        this.view.notifyChange(true);
-        console.log(object);
-    });
-};
-*/
 
 export default ModelLoader;
