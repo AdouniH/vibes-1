@@ -57,6 +57,8 @@ function c3DEngine(rendererOrDiv, options = {}) {
             alpha: options.alpha,
             logarithmicDepthBuffer: options.logarithmicDepthBuffer,
         });
+        this.renderer.shadowMap.enabled = true;
+        this.renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default
     } catch (ex) {
         // eslint-disable-next-line no-console
         console.error('Failed to create WebGLRenderer', ex);

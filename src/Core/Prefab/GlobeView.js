@@ -217,7 +217,7 @@ function GlobeView(viewerDiv, coordCarto, options = {}) {
     const sun = new THREE.DirectionalLight();
     sun.position.set(-0.5, 0, 1);
     sun.updateMatrixWorld(true);
-    wgs84TileLayer.object3d.add(sun);
+    // wgs84TileLayer.object3d.add(sun);
 
     this.addLayer(wgs84TileLayer);
 

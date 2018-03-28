@@ -56,27 +56,32 @@ ModelLoader.prototype._loadModel = function loadModel(obj, coord, rotateX, rotat
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-    
-    // Create a DirectionalLight and turn on shadows for the light
-    var light = new THREE.DirectionalLight(0xffffff, 1, 100);
-    light.position.set(-0.5, 0, 1);        
-    light.castShadow = true; // default false      
-    this.view.scene.add(light);
-
+    // Create a PointLight and turn on shadows for the light
+    var plight = new THREE.PointLight(0xffffff, 1, 0, 1);
+    var coordLight = coord.clone();
+    coordLight.setAltitude(coordLight.altitude() + 350);
+    plight.position.copy(coordLight.as(this.view.referenceCrs).xyz());
+    plight.position.y += 70;
+    plight.updateMatrixWorld();
+    plight.castShadow = true;            // default false
+  
     // Set up shadow properties for the light
-    light.shadow.mapSize.width = 512;  // default
-    light.shadow.mapSize.height = 512; // default
-    light.shadow.camera.near = 0.5;    // default
-    light.shadow.camera.far = 500;     // default
+    plight.shadow.mapSize.width = 512;  // default
+    plight.shadow.mapSize.height = 512; // default
+    plight.shadow.camera.near = 0.5;       // default
+    plight.shadow.camera.far = 5000;      // default
 
+    this.view.scene.add(plight);
 
     // Create a plane that receives shadows (but does not cast them)
     var planeID = this.view.mainLoop.gfxEngine.getUniqueThreejsLayer();
     var planeGeometry = new THREE.PlaneBufferGeometry(10, 10, 32, 32);
-    var planeMaterial = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    var planeMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    // var planeMaterial = new THREE.ShadowMaterial();
+    // planeMaterial.opacity = 0.2;
     var plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane = this._placeModel(plane, coord, 0, 0, 0, scale);
-    plane.position.y += 50;
+    plane.position.y += 200;
     plane.receiveShadow = true;
 
     plane.traverse((obj) => { obj.layers.set(planeID); });
