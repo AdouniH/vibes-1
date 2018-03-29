@@ -76,10 +76,10 @@ ModelLoader.prototype._loadModel = function loadModel(obj, coord, rotateX, rotat
     // Create a plane that receives shadows (but does not cast them)
     var planeID = this.view.mainLoop.gfxEngine.getUniqueThreejsLayer();
     var planeGeometry = new THREE.PlaneBufferGeometry(30000, 30000, 32, 32);
-    var planeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0xffffff, shininess: 0 });
-    // var planeMaterial = new THREE.ShadowMaterial();
+    // var planeMaterial = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0xffffff, shininess: 0 });
+    var planeMaterial = new THREE.ShadowMaterial({ side: THREE.DoubleSide, depthTest: false });
     planeMaterial.transparent = true;
-    planeMaterial.opacity = 0.3;
+    planeMaterial.opacity = 0.5;
     var plane = new THREE.Mesh(planeGeometry, planeMaterial);
     plane = this._placeModel(plane, coord, 0, 0, 0, scale);
     plane.position.y += 200;
