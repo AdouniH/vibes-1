@@ -32,6 +32,8 @@ function LayerManager(view, doc, menu, coord, rotateX, rotateY, rotateZ, scale, 
 }
 
 LayerManager.prototype.initListener = function initListener() {
+    this.document.addEventListener('keypress', _this.checkKeyPress, false);
+    this.document.addEventListener('click', _this.picking, false);
     this.document.addEventListener('drop', _this.documentDrop, false);
     var prevDefault = e => e.preventDefault();
     this.document.addEventListener('dragenter', prevDefault, false);
@@ -79,7 +81,6 @@ LayerManager.prototype._readFile = function readFile(file) {
         });
         reader.readAsText(file);
         return 0;
-
     }
     // Other format
     else {
@@ -89,8 +90,8 @@ LayerManager.prototype._readFile = function readFile(file) {
 
 LayerManager.prototype.handleLayer = function handleLayer(model) {
     // Add a checkbox to the GUI, named after the layer
-    var name = model[0].materialLibraries[0].substring(0, model[0].materialLibraries[0].length - 4);
-    var controller = _this.layerFolder.add({ Layer: false }, 'Layer').name(name).onChange((checked) => {
+    var name = model[0].name.split('_')[0];
+    var controller = _this.layerFolder.add({ Layer: false, Name: name }, 'Layer').name(name.split('-').join(' ')).onChange((checked) => {
         if (checked) {
             // Add layer and controller to the list
             _this.listLayers.push(model);
@@ -157,6 +158,7 @@ LayerManager.prototype.initSymbolizer = function initSymbolizer(complex) {
         // Call Symbolizer
         _this.nbSymbolizer++;
         var symbolizer = _this.symbolizer(_this.view, listObj, listEdge, _this.menu, _this.nbSymbolizer);
+        _this.symbolizerInit = symbolizer;
         // Open symbolizer with 'stylize parts'
         if (complex) {
             symbolizer.initGui();
@@ -195,7 +197,6 @@ LayerManager.prototype.initSymbolizer = function initSymbolizer(complex) {
         _this.listControllers.forEach((controller) => {
             _this.menu.gui.__folders.Layers.remove(controller);
         });
-
         // Empty layer and controllers list;
         _this.listLayers = [];
         _this.listControllers = [];
@@ -220,6 +221,52 @@ function removeFromList(list, elmt) {
 function loadFileException(message) {
     this.message = message;
     this.name = 'loadFileException';
+}
+
+LayerManager.prototype.checkKeyPress = function checkKeyPress(key) {
+    if (_this.symbolizerInit) {
+        if ((key.keyCode == '56') || (key.keyCode == '113')) {
+            _this.symbolizerInit._xplus();
+        }
+        if ((key.keyCode == '50') || (key.keyCode == '115')) {
+            _this.symbolizerInit._xmoins();
+        }
+        if ((key.keyCode == '52') || (key.keyCode == '97')) {
+            _this.symbolizerInit._yplus();
+        }
+        if ((key.keyCode == '54') || (key.keyCode == '122')) {
+            _this.symbolizerInit._ymoins();
+        }
+        if ((key.keyCode == '55') || (key.keyCode == '119')) {
+            _this.symbolizerInit._zplus();
+        }
+        if ((key.keyCode == '51') || (key.keyCode == '120')) {
+            _this.symbolizerInit._zmoins();
+        }
+    }
+};
+
+LayerManager.prototype.picking = function picking(event) {
+    // Pick an object with batch id
+    var mouse = _this.view.eventToNormalizedCoords(event);
+    var raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(mouse, _this.view.camera.camera3D);
+    // calculate objects intersecting the picking ray
+    var intersects = raycaster.intersectObjects(_this.view.scene.children, true);
+    if (intersects.length > 0) {
+        var source = getParent(intersects[0].object);
+        if (source.name != 'globe' && source.name != '') {
+            _this.layerFolder.__controllers.forEach((element) => {
+                if (element.__checkbox && element.object.Name == source.name.split('_')[0]) element.setValue(!element.__prev);
+                return element;
+            });
+        }
+    }
+};
+
+function getParent(obj) {
+    if (obj.parent.parent != null) return getParent(obj.parent);
+    return obj;
 }
 
 export default LayerManager;

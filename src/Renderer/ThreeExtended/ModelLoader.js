@@ -12,7 +12,6 @@ function ModelLoader(view) {
     // Constructor
     this.view = view;
     this.model = [new THREE.Group(), new THREE.Group()];
-    this.obj = new THREE.Group();
 }
 
 ModelLoader.prototype.loadOBJ = function loadOBJ(url, coord, rotateX, rotateY, rotateZ, scale, callback, menu) {
@@ -27,6 +26,23 @@ ModelLoader.prototype.loadOBJ = function loadOBJ(url, coord, rotateX, rotateY, r
     });
     promise.then(() => callback(this.model, menu));
 };
+
+function controleName(name, view) {
+    var i = 1;
+    var verif;
+    var j;
+    do {
+        verif = true;
+        for (j = 0; j < view.scene.children.length; j++) {
+            var element = view.scene.children[j];
+            if (element.name.split('_')[0] == name) {
+                verif = false;
+                name = name.split('-')[0].concat('-', ++i);
+            }
+        }
+    } while (!verif);
+    return name;
+}
 
 ModelLoader.prototype._loadModel = function loadModel(obj, lines, coord, rotateX, rotateY, rotateZ, scale) {
     var objID = this.view.mainLoop.gfxEngine.getUniqueThreejsLayer();
@@ -59,6 +75,12 @@ ModelLoader.prototype._loadModel = function loadModel(obj, lines, coord, rotateX
 
     // Update coordinate of the object
     obj.updateMatrixWorld();
+    // set name
+    // check name
+    var name = controleName(obj.materialLibraries[0].substring(0, obj.materialLibraries[0].length - 4), this.view);
+    obj.name = name.concat('_faces');
+    lines.name = name.concat('_lines');
+    // add to scene
     this.view.scene.add(obj);
     this.view.scene.add(lines);
     this.view.notifyChange(true);
@@ -84,10 +106,11 @@ ModelLoader.prototype.doAfter = function doAfter(obj, islast, self) {
             // Material initialization
             obj.children[i].material.transparent = true;
             obj.children[i].castShadow = true;
-            self.model[0].add(obj);
             // Extract edges
             var edges = new THREE.EdgesGeometry(obj.children[i].geometry);
             var line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true }));
+            //
+            self.model[0].add(obj.children[i]);
             self.model[1].add(line);
         }
     }
@@ -97,11 +120,13 @@ ModelLoader.prototype.doAfter = function doAfter(obj, islast, self) {
         self.model[0].traverse(obj => obj.layers.set(objID));
         self.view.camera.camera3D.layers.enable(objID);
         self.model[0].updateMatrixWorld();
+        self.model[0].name = 'bati3D_faces';
         self.view.scene.add(self.model[0]);
         var linesID = self.view.mainLoop.gfxEngine.getUniqueThreejsLayer();
         self.model[1].traverse(lines => lines.layers.set(linesID));
         self.view.camera.camera3D.layers.enable(linesID);
         self.model[1].updateMatrixWorld();
+        self.model[1].name = 'bati3D_lines';
         self.view.scene.add(self.model[1]);
         self.view.notifyChange(true);
         console.log('bati3D Loaded');

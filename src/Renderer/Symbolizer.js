@@ -528,6 +528,9 @@ Symbolizer.prototype.initGui = function addToGUI() {
         this._addResetPosition(positionFolder);
         this._addRotationsAll(positionFolder);
         this._addScaleAll(positionFolder);
+        this._addMoveobjcoordXAll(positionFolder);
+        // this._addMoveobjcoordYAll(positionFolder);
+        // this._addMoveobjcoordZAll(positionFolder);
         var edgesFolder = parentFolder.addFolder('Edges');
         this._addColorEdgeAll(edgesFolder);
         this._addOpacityEdgeAll(edgesFolder);
@@ -596,6 +599,39 @@ Symbolizer.prototype._addScaleAll = function addScaleAll(folder) {
     });
 };
 
+Symbolizer.prototype._addMoveobjcoordXAll = function addMoveobjcoordXAll(folder) {
+    folder.add({ MovecoordX: 0 }, 'MovecoordX', -50, 50, 1).name('MovecoordX').onChange((value) => {
+        for (var i = 0; i < this.obj.length; i++) {
+            console.log(value);
+            this.obj[i].translateX(value);
+            this.edges[i].translateX(value);
+            this.obj[i].updateMatrixWorld();
+            this.edges[i].updateMatrixWorld();
+        }
+        this.view.notifyChange(true);
+    });
+    folder.add({ MovecoordY: 0 }, 'MovecoordY', -50, 50, 0.1).name('MovecoordY').onChange((value) => {
+        for (var i = 0; i < this.obj.length; i++) {
+            console.log(value);
+            this.obj[i].translateY(value);
+            this.edges[i].translateY(value);
+            this.obj[i].updateMatrixWorld();
+            this.edges[i].updateMatrixWorld();
+        }
+        this.view.notifyChange(true);
+    });
+    folder.add({ MovecoordZ: 0 }, 'MovecoordZ', -50, 50, 0.1).name('MovecoordZ').onChange((value) => {
+        for (var i = 0; i < this.obj.length; i++) {
+            console.log(value);
+            this.obj[i].translateZ(value);
+            this.edges[i].translateZ(value);
+            this.obj[i].updateMatrixWorld();
+            this.edges[i].updateMatrixWorld();
+        }
+        this.view.notifyChange(true);
+    });
+};
+
 Symbolizer.prototype._addRotationsAll = function addRotationsAll(folder) {
     var initialRotateX = this.obj[0].rotation.x;
     var initialRotateY = this.obj[0].rotation.y;
@@ -605,7 +641,6 @@ Symbolizer.prototype._addRotationsAll = function addRotationsAll(folder) {
     var prevValueZ = 0;
     folder.add({ rotationX: initialRotateX }, 'rotationX', -Math.PI, Math.PI, Math.PI / 100).name('rotationX').onChange((value) => {
         for (var i = 0; i < this.obj.length; i++) {
-
             this.obj[i].rotateX(value - prevValueX);
             this.edges[i].rotateX(value - prevValueX);
             prevValueX = value;
@@ -616,7 +651,6 @@ Symbolizer.prototype._addRotationsAll = function addRotationsAll(folder) {
     });
     folder.add({ rotationY: initialRotateY }, 'rotationY', -Math.PI, Math.PI, Math.PI / 100).name('rotationY').onChange((value) => {
         for (var i = 0; i < this.obj.length; i++) {
-
             this.obj[i].rotateY(value - prevValueY);
             this.edges[i].rotateY(value - prevValueY);
             prevValueY = value;
@@ -627,7 +661,6 @@ Symbolizer.prototype._addRotationsAll = function addRotationsAll(folder) {
     });
     folder.add({ rotationZ: initialRotateZ }, 'rotationZ', -Math.PI, Math.PI, Math.PI / 100).name('rotationZ').onChange((value) => {
         for (var i = 0; i < this.obj.length; i++) {
-
             this.obj[i].rotateZ(value - prevValueZ);
             this.edges[i].rotateZ(value - prevValueZ);
             prevValueZ = value;
@@ -778,6 +811,9 @@ Symbolizer.prototype.initGuiAll = function addToGUI() {
     this._addResetPosition(positionFolder);
     this._addRotationsAll(positionFolder);
     this._addScaleAll(positionFolder);
+    this._addMoveobjcoordXAll(positionFolder);
+    // this._addMoveobjcoordYAll(positionFolder);
+    // this._addMoveobjcoordZAll(positionFolder);
     var edgesFolder = folder.addFolder('Edges');
     this._addColorEdgeAll(edgesFolder);
     this._addOpacityEdgeAll(edgesFolder);
@@ -820,7 +856,7 @@ function getRandomColor() {
     return color;
 }
 
-/*
+
 function getSourceSynch(url) {
     var req = new XMLHttpRequest();
     req.open('GET', url, false);
@@ -833,6 +869,86 @@ function getMethod(shader) {
     var method = JSON.parse(text);
     return method;
 }
-*/
 
+var valXplus = 0;
+Symbolizer.prototype._xplus = function xplus() {
+    valXplus += 1;
+    for (var i = 0; i < this.obj.length; i++) {
+        this.obj[i].translateX(valXplus);
+        this.edges[i].translateX(valXplus);
+        // this.obj[i].rotateY(value);
+        // this.edges[i].rotateY(value);
+        this.obj[i].updateMatrixWorld();
+        this.edges[i].updateMatrixWorld();
+    }
+    this.view.notifyChange(true);
+};
+
+var valXmoins = 0;
+Symbolizer.prototype._xmoins = function _xmoins() {
+  valXmoins -= 1;
+    for (var i = 0; i < this.obj.length; i++) {
+        this.obj[i].translateX(valXmoins);
+        this.edges[i].translateX(valXmoins);
+        // this.obj[i].rotateY(value);
+        // this.edges[i].rotateY(value);
+        this.obj[i].updateMatrixWorld();
+        this.edges[i].updateMatrixWorld();
+    }
+    this.view.notifyChange(true);
+};
+var valYplus = 0;
+Symbolizer.prototype._yplus = function yplus() {
+  valYplus += 1;
+    for (var i = 0; i < this.obj.length; i++) {
+        this.obj[i].translateZ(valYplus);
+        this.edges[i].translateZ(valYplus);
+        // this.obj[i].rotateY(value);
+        // this.edges[i].rotateY(value);
+        this.obj[i].updateMatrixWorld();
+        this.edges[i].updateMatrixWorld();
+    }
+    this.view.notifyChange(true);
+};
+
+var valYmoins = 0;
+Symbolizer.prototype._ymoins = function _ymoins() {
+    valYmoins -= 1;
+    for (var i = 0; i < this.obj.length; i++) {
+      this.obj[i].translateZ(valYmoins);
+      this.edges[i].translateZ(valYmoins);
+        // this.obj[i].rotateY(value);
+        // this.edges[i].rotateY(value);
+        this.obj[i].updateMatrixWorld();
+        this.edges[i].updateMatrixWorld();
+    }
+    this.view.notifyChange(true);
+};
+var valZplus = 0;
+Symbolizer.prototype._zplus = function zplus() {
+    valZplus += 1;
+    for (var i = 0; i < this.obj.length; i++) {
+        this.obj[i].translateY(valZplus);
+        this.edges[i].translateY(valZplus);
+        // this.obj[i].rotateY(value);
+        // this.edges[i].rotateY(value);
+        this.obj[i].updateMatrixWorld();
+        this.edges[i].updateMatrixWorld();
+    }
+    this.view.notifyChange(true);
+};
+
+var valZmoins = 0;
+Symbolizer.prototype._zmoins = function _zmoins() {
+    valZmoins -= 1;
+    for (var i = 0; i < this.obj.length; i++) {
+        this.obj[i].translateY(valZmoins);
+        this.edges[i].translateY(valZmoins);
+        // this.obj[i].rotateY(value);
+        // this.edges[i].rotateY(value);
+        this.obj[i].updateMatrixWorld();
+        this.edges[i].updateMatrixWorld();
+    }
+    this.view.notifyChange(true);
+};
 export default Symbolizer;
