@@ -847,7 +847,7 @@ function loadFileException(message) {
     this.name = 'loadFileException';
 }
 
-function getRandomColor() {
+export function getRandomColor() {
     var letters = '0123456789ABCDEF';
     var color = '#';
     for (var i = 0; i < 6; i++) {
