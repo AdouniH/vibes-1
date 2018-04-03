@@ -869,7 +869,7 @@ function getMethod(shader) {
     var method = JSON.parse(text);
     return method;
 }
-
+/*
 var valXplus = 0;
 Symbolizer.prototype._xplus = function xplus() {
     valXplus += 1;
@@ -883,7 +883,7 @@ Symbolizer.prototype._xplus = function xplus() {
     }
     this.view.notifyChange(true);
 };
-
+*/
 var valXmoins = 0;
 Symbolizer.prototype._xmoins = function _xmoins() {
   valXmoins -= 1;
