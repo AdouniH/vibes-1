@@ -884,6 +884,7 @@ Symbolizer.prototype._xplus = function xplus() {
     this.view.notifyChange(true);
 };
 */
+/*
 var valXmoins = 0;
 Symbolizer.prototype._xmoins = function _xmoins() {
   valXmoins -= 1;
@@ -951,4 +952,5 @@ Symbolizer.prototype._zmoins = function _zmoins() {
     }
     this.view.notifyChange(true);
 };
+*/
 export default Symbolizer;

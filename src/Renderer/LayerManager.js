@@ -226,21 +226,27 @@ function loadFileException(message) {
 LayerManager.prototype.checkKeyPress = function checkKeyPress(key) {
     if (_this.listLayers.length == 1) {
         if ((key.keyCode == '56') || (key.keyCode == '113')) {
+          alert("xplus");
             _this._xplus();
         }
         if ((key.keyCode == '50') || (key.keyCode == '115')) {
+          alert("xmoins");
             _this._xmoins();
         }
         if ((key.keyCode == '52') || (key.keyCode == '97')) {
+          alert("yplus");
             _this._yplus();
         }
         if ((key.keyCode == '54') || (key.keyCode == '122')) {
+          alert("ymoins");
             _this._ymoins();
         }
         if ((key.keyCode == '55') || (key.keyCode == '119')) {
+          alert("zplus");
             _this._zplus();
         }
         if ((key.keyCode == '51') || (key.keyCode == '120')) {
+          alert("zmoins");
             _this._zmoins();
         }
     }
@@ -256,8 +262,6 @@ LayerManager.prototype._xplus = function xplus() {
         // for (var i = 0; i < obj.length; i++) {
         obj.translateX(valXplus);
         edges.translateX(valXplus);
-        // obj[i].rotateY(value);
-        // edges[i].rotateY(value);
         obj.updateMatrixWorld();
         edges.updateMatrixWorld();
         // }
@@ -265,18 +269,21 @@ LayerManager.prototype._xplus = function xplus() {
     }
 };
 
-LayerManager.prototype._xmoins = function _xmoins() {
-  for (var i = 0; i < this.obj.length; i++) {
-        this.obj[i].position.x -= 20;
-        this.obj[i].position.z += 18;
-        this.edges[i].position.x -= 20;
-        this.edges[i].position.z += 18;
-        // this.obj[i].rotateY(value);
-        // this.edges[i].rotateY(value);
-        this.obj[i].updateMatrixWorld();
-        this.edges[i].updateMatrixWorld();
-    }
-    this.view.notifyChange(true);
+var valXmoins = 0;
+LayerManager.prototype._xmoins = function xmoins() {
+    valXmoins -= 1;
+  //  if (_this.listLayers.length == 1) {
+        var obj = _this.listLayers[0][0];
+        var edges = _this.listLayers[0][1];
+        console.log(obj, edges);
+        // for (var i = 0; i < obj.length; i++) {
+        obj.translateY(valXmoins);
+        edges.translateY(valXmoins);
+        obj.updateMatrixWorld();
+        edges.updateMatrixWorld();
+        // }
+        this.view.notifyChange(true);
+  //  }
 };
 
 LayerManager.prototype._yplus = function yplus() {
